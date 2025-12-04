@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mylifeOS v5.8 - Smart & Local</title>
+    <title>mylifeOS v5.9 - Fixed Layout</title>
     
     <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -268,7 +268,7 @@
                 let newHabits = isDone ? doneHabits.filter(id => id !== habitId) : [...doneHabits, habitId];
                 
                 // Tarih kontrolü kaldırıldı: Geçmiş günler de altın kazandırır
-                updateGold(isDone ? -10 : 10);
+                updateGold(isDone ? -5 : 5);
                 
                 const newDayData = { ...dayData, habits: newHabits };
                 updateCloud(`history/${dateKey}`, newDayData);
@@ -331,7 +331,7 @@
                                 updateCloud('projects', updatedProjects);
                             }
                             // Tarih kontrolü kaldırıldı
-                            updateGold(wasDone ? -10 : 10);
+                            updateGold(wasDone ? -5 : 5);
                         }
                         const allDone = newSubItems.every(i => i === true);
                         return { ...t, subItems: newSubItems, completed: allDone };
@@ -421,7 +421,7 @@
             }
 
             return (
-                <div className="flex flex-col h-screen max-w-md mx-auto bg-white shadow-2xl overflow-hidden">
+                <div className="flex flex-col h-[100dvh] max-w-md mx-auto bg-white shadow-2xl overflow-hidden">
                     <div className="bg-white px-5 pt-10 pb-3 border-b border-gray-100 z-20">
                         <div className="flex justify-between items-start">
                             <div>
@@ -447,7 +447,7 @@
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-gray-50/30 scroll-smooth no-scrollbar">
+                    <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-6 bg-gray-50/30 scroll-smooth no-scrollbar">
                         {activeTab === 'planner' && (
                             <>
                                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -682,6 +682,14 @@
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="bg-white border-t border-gray-100 flex justify-around pb-6 pt-2 z-30 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
+                        <button onClick={() => setActiveTab('calendar')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='calendar' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Calendar /><span className="text-[9px] font-bold">TAKVİM</span></button>
+                        <button onClick={() => setActiveTab('projects')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='projects' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Briefcase /><span className="text-[9px] font-bold">HEDEF</span></button>
+                        <button onClick={() => setActiveTab('planner')} className={`p-3 -mt-8`}><div className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center border-4 border-white transition-transform ${activeTab==='planner' ? 'bg-indigo-600 text-white scale-110' : 'bg-gray-800 text-white'}`}><Icons.Plus /></div></button>
+                        <button onClick={() => setActiveTab('habits')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='habits' ? 'text-indigo-600':'text-gray-400'}`}><Icons.HabitList /><span className="text-[9px] font-bold">RUTİNLER</span></button>
+                        <button onClick={() => setActiveTab('store')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='store' ? 'text-yellow-600':'text-gray-400'}`}><Icons.Store /><span className="text-[9px] font-bold">MAĞAZA</span></button>
                     </div>
 
                     {modal.open && (
