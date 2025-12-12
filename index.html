@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mylifeOS v5.13 - Calendar Clock</title>
+    <title>mylifeOS v5.15 - Colorful Rhythm</title>
     
     <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -142,12 +142,21 @@
             );
         }
 
-        // --- CLOCK COMPONENT (PIZZA SLICE STYLE) ---
+        // --- CLOCK COMPONENT (PIZZA SLICE + 5 COLOR SYSTEM) ---
         const DailyClocks = ({ tasks }) => {
             const radius = 20; 
             const strokeWidth = 40; 
             const circumference = 2 * Math.PI * radius;
             
+            // 5 Renkli Sistem: Yüzdeye göre renk döndürür
+            const getProgressColor = (percent) => {
+                if (percent === 0) return "#EF4444"; // Kırmızı (Planlandı ama 0)
+                if (percent < 40) return "#F97316"; // Turuncu
+                if (percent < 70) return "#EAB308"; // Sarı
+                if (percent < 100) return "#22C55E"; // Yeşil
+                return "#06B6D4"; // Turkuaz (Tamamlandı)
+            };
+
             const getTaskStroke = (t, period) => {
                 if (!t.startTime || !t.duration) return null;
                 
@@ -168,13 +177,22 @@
                 const relativeDuration = actualEnd - actualStart;
                 
                 const rotation = (relativeStart / 720) * 360;
-                
                 const filled = (relativeDuration / 720) * circumference;
                 const gap = circumference - filled;
 
+                // Yüzde Hesaplama
+                let percent = 0;
+                if (t.subItems && t.subItems.length > 0) {
+                    const done = t.subItems.filter(Boolean).length;
+                    percent = (done / t.subItems.length) * 100;
+                } else {
+                    percent = t.completed ? 100 : 0;
+                }
+
                 return {
                     dash: `${filled} ${gap}`,
-                    rotate: rotation
+                    rotate: rotation,
+                    color: getProgressColor(percent)
                 };
             };
 
@@ -197,10 +215,10 @@
                                                 key={`am-${t.id}`} 
                                                 cx="50" cy="50" r="20" 
                                                 fill="none" 
-                                                stroke={t.completed ? "#10B981" : "#4B5563"} 
+                                                stroke={style.color} 
                                                 strokeWidth="40" 
                                                 strokeDasharray={style.dash} 
-                                                style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} 
+                                                transform={`rotate(${style.rotate} 50 50)`}
                                             />
                                         )
                                     })}
@@ -230,10 +248,10 @@
                                                 key={`pm-${t.id}`} 
                                                 cx="50" cy="50" r="20" 
                                                 fill="none" 
-                                                stroke={t.completed ? "#10B981" : "#4B5563"} 
+                                                stroke={style.color} 
                                                 strokeWidth="40" 
                                                 strokeDasharray={style.dash} 
-                                                style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} 
+                                                transform={`rotate(${style.rotate} 50 50)`}
                                             />
                                         )
                                     })}
@@ -786,14 +804,6 @@
                                 <DailyClocks tasks={currentDayData.tasks || []} />
                             </div>
                         )}
-                    </div>
-
-                    <div className="bg-white border-t border-gray-100 flex justify-around pb-6 pt-2 z-30 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
-                        <button onClick={() => setActiveTab('calendar')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='calendar' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Calendar /><span className="text-[9px] font-bold">TAKVİM</span></button>
-                        <button onClick={() => setActiveTab('projects')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='projects' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Briefcase /><span className="text-[9px] font-bold">HEDEF</span></button>
-                        <button onClick={() => setActiveTab('planner')} className={`p-3 -mt-8`}><div className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center border-4 border-white transition-transform ${activeTab==='planner' ? 'bg-indigo-600 text-white scale-110' : 'bg-gray-800 text-white'}`}><Icons.Plus /></div></button>
-                        <button onClick={() => setActiveTab('habits')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='habits' ? 'text-indigo-600':'text-gray-400'}`}><Icons.HabitList /><span className="text-[9px] font-bold">RUTİNLER</span></button>
-                        <button onClick={() => setActiveTab('store')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='store' ? 'text-yellow-600':'text-gray-400'}`}><Icons.Store /><span className="text-[9px] font-bold">MAĞAZA</span></button>
                     </div>
 
                     {modal.open && (
