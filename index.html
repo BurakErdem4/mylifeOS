@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mylifeOS v5.10 - Visual Day</title>
+    <title>mylifeOS v5.11 - Stable Cloud</title>
     
+    <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
+    <!-- FIREBASE (Compat Version - En Kararlı Yöntem) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f3f4f6; }
         input, button, select, textarea { outline: none; }
@@ -18,8 +24,6 @@
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -27,12 +31,7 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module">
-        // --- FIREBASE IMPORTS ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-
+    <script type="text/babel">
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyBJLQw1m2Ud17GfQ5xwXqA0_oHjTUo0eqA",
@@ -44,9 +43,10 @@
             appId: "1:536656079490:web:4901bb3b00d466ef99e29b"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
+        // Initialize Firebase (Compat)
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
 
         const { useState, useEffect } = React;
 
@@ -85,7 +85,7 @@
         ];
 
         // --- AUTH COMPONENT ---
-        function AuthScreen({ onLogin }) {
+        function AuthScreen() {
             const [isLogin, setIsLogin] = useState(true);
             const [email, setEmail] = useState("");
             const [password, setPassword] = useState("");
@@ -98,9 +98,9 @@
                 setLoading(true);
                 try {
                     if (isLogin) {
-                        await signInWithEmailAndPassword(auth, email, password);
+                        await auth.signInWithEmailAndPassword(email, password);
                     } else {
-                        await createUserWithEmailAndPassword(auth, email, password);
+                        await auth.createUserWithEmailAndPassword(email, password);
                     }
                 } catch (err) {
                     setError(err.message.replace("Firebase:", "").trim());
@@ -147,7 +147,6 @@
             const radius = 40;
             const circumference = 2 * Math.PI * radius;
             
-            // Helper to get stroke-dasharray for a task
             const getTaskStroke = (t, period) => {
                 if (!t.startTime || !t.duration) return null;
                 
@@ -156,26 +155,18 @@
                 const duration = Number(t.duration);
                 const endMins = startMins + duration;
 
-                // Define period ranges (AM: 0-720, PM: 720-1440)
                 const pStart = period === 'AM' ? 0 : 720;
                 const pEnd = period === 'AM' ? 720 : 1440;
 
-                // Check overlap
                 const actualStart = Math.max(startMins, pStart);
                 const actualEnd = Math.min(endMins, pEnd);
 
-                if (actualStart >= actualEnd) return null; // No overlap with this clock
+                if (actualStart >= actualEnd) return null;
 
-                // Calculate visual properties
                 const relativeStart = actualStart - pStart;
                 const relativeDuration = actualEnd - actualStart;
                 
-                // SVG Rotation: -90deg is 12 o'clock. 
-                // We need to rotate based on start time. 
-                // 720 mins = 360 degrees. 1 min = 0.5 deg.
                 const rotation = (relativeStart / 720) * 360;
-                
-                // Dasharray: filled length + gap
                 const filled = (relativeDuration / 720) * circumference;
                 const gap = circumference - filled;
 
@@ -189,13 +180,10 @@
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
                     <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Günün Ritmi</div>
                     <div className="flex justify-around items-center">
-                        {/* AM CLOCK */}
                         <div className="flex flex-col items-center gap-2">
                             <div className="relative w-24 h-24">
-                                {/* Base Circle */}
                                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                                     <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-                                    {/* Task Segments */}
                                     {tasks.map(t => {
                                         const style = getTaskStroke(t, 'AM');
                                         if(!style) return null;
@@ -205,7 +193,6 @@
                                     })}
                                 </svg>
                                 <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-400">AM</div>
-                                {/* Hour Markers (Simple dots) */}
                                 <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
                                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
                                 <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
@@ -214,7 +201,6 @@
                             <span className="text-[10px] text-gray-400">00:00 - 12:00</span>
                         </div>
 
-                        {/* PM CLOCK */}
                         <div className="flex flex-col items-center gap-2">
                             <div className="relative w-24 h-24">
                                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
@@ -247,7 +233,7 @@
 
             // Auth Listener
             useEffect(() => {
-                const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+                const unsubscribe = auth.onAuthStateChanged((currentUser) => {
                     setUser(currentUser);
                     setLoadingUser(false);
                 });
@@ -274,10 +260,10 @@
             // Firebase Sync Logic
             useEffect(() => {
                 if (!user) return;
-                const userRef = ref(db, 'users/' + user.uid);
+                const userRef = db.ref('users/' + user.uid);
                 
                 // Initial Load & Realtime Sync
-                onValue(userRef, (snapshot) => {
+                userRef.on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         setProjects(data.projects || []);
@@ -287,7 +273,7 @@
                         setGold(data.gold || 0);
                     } else {
                         // First time user: Save defaults
-                        set(userRef, {
+                        userRef.set({
                             projects: [],
                             history: {},
                             habits: DEFAULT_HABITS,
@@ -296,6 +282,7 @@
                         });
                     }
                 });
+                return () => userRef.off();
             }, [user]);
 
             // --- HELPERS (LOCAL TIME FIXED) ---
@@ -325,7 +312,7 @@
             // --- FIREBASE ACTIONS ---
             const updateCloud = (path, value) => {
                 if(!user) return;
-                set(ref(db, `users/${user.uid}/${path}`), value);
+                db.ref(`users/${user.uid}/${path}`).set(value);
             };
 
             const updateGold = (amount) => {
@@ -376,7 +363,6 @@
                     const p = modal.data;
                     const amount = Number(form.amount) || 1; 
                     
-                    // Akıllı Süre Hesaplama
                     let calculatedDuration = form.time;
                     if (!calculatedDuration && p.totalEstTime && p.totalUnit) {
                         const timePerUnitHours = p.totalEstTime / p.totalUnit;
@@ -526,7 +512,7 @@
                                     <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-100">
                                         <span className="font-bold text-yellow-600">{gold}</span><Icons.Coin />
                                     </div>
-                                    <button onClick={() => signOut(auth)} className="bg-gray-100 p-1.5 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition"><Icons.Logout /></button>
+                                    <button onClick={() => auth.signOut()} className="bg-gray-100 p-1.5 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition"><Icons.Logout /></button>
                                 </div>
                             </div>
                         </div>
@@ -542,7 +528,6 @@
                     <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-6 bg-gray-50/30 scroll-smooth no-scrollbar">
                         {activeTab === 'planner' && (
                             <>
-                                {/* CLOCK COMPONENT ADDED HERE */}
                                 <DailyClocks tasks={currentDayData.tasks || []} />
 
                                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -615,9 +600,221 @@
                                     <div className="text-xs font-bold text-gray-400 mb-3 uppercase">YENİ RUTİN EKLE</div>
                                     <div className="flex gap-2">
                                         <input placeholder="İkon (🧘‍♂️)" className="w-16 p-3 bg-white border border-gray-200 rounded-xl text-center text-xl" value={form.icon || ''} onChange={e=>setForm({...form, icon: e.target.value})} />
-                                        <input placeholder="Rutin Adı" className="flex-1 p-3 bg-gray-50 rounded-xl" value={form.title || ''} onChange={e=>setForm({...form, title: e.target.value})} />
+                                        <input placeholder="Rutin Adı (Örn: 30dk Yürüyüş)" className="flex-1 p-3 bg-white border border-gray-200 rounded-xl" value={form.title || ''} onChange={e=>setForm({...form, title: e.target.value})} />
                                     </div>
-                                    <button onClick={addHabit} className="w-full mt-3 bg-indigo-600 text-white py-3 rounded-xl font-bold">Ekle</button>
+                                    <button onClick={addHabit} className="w-full mt-3 bg-indigo-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200">Listeye Ekle</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'projects' && (
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="font-bold text-gray-700">Büyük Hedeflerim</h2>
+                                    <button onClick={() => openModal('project_new')} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100">+ YENİ</button>
+                                </div>
+                                {projects.map(p => {
+                                    const isFlipped = flippedCards[p.id];
+                                    const total = Number(p.totalUnit) || 1;
+                                    const current = Number(p.currentUnit) || 0;
+                                    const pct = Math.min(100, Math.round((current / total) * 100));
+                                    const remaining = Number(p.totalUnit) - Number(p.currentUnit);
+                                    const estTimePerUnit = Number(p.totalEstTime) > 0 ? (Number(p.totalEstTime) / total) : 0;
+                                    const remainingTime = Math.round(remaining * estTimePerUnit);
+
+                                    return (
+                                        <div key={p.id} className="relative h-64 perspective-1000 group">
+                                            <div className={`w-full h-full relative transition-all duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                                                <div className="absolute inset-0 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 backface-hidden flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex justify-between items-start">
+                                                            <h3 className="font-bold text-gray-800 text-lg">{p.title}</h3>
+                                                            <button onClick={() => setFlippedCards({...flippedCards, [p.id]: true})} className="p-1.5 bg-gray-50 rounded-full text-gray-400 hover:text-indigo-600"><Icons.Rotate /></button>
+                                                        </div>
+                                                        <div className="mt-2 text-xs font-medium text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded">🎯 {current}/{total} {p.unit}</div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex justify-between text-xs font-bold text-indigo-600 mb-1"><span>İLERLEME</span><span>%{pct}</span></div>
+                                                        <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className={`h-full transition-all duration-1000 ${pct>=100 ? 'bg-green-500':'bg-indigo-500'}`} style={{width: `${pct}%`}}></div></div>
+                                                        {p.totalEstTime > 0 && <div className="text-right text-[10px] text-gray-400 mt-1">Kalan: ~{remainingTime} saat</div>}
+                                                    </div>
+                                                </div>
+                                                <div className="absolute inset-0 bg-gray-800 text-white p-5 rounded-2xl shadow-lg rotate-y-180 backface-hidden flex flex-col">
+                                                    <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                                                        <span className="text-xs font-bold tracking-widest text-gray-400">PROJE KASASI</span>
+                                                        <button onClick={() => setFlippedCards({...flippedCards, [p.id]: false})} className="text-gray-400 hover:text-white"><Icons.Rotate /></button>
+                                                    </div>
+                                                    <textarea className="flex-1 bg-gray-700 rounded-lg p-3 text-sm text-gray-200 resize-none mb-2" placeholder="Notlar..." value={p.notes || ''} onChange={(e) => { const updated = projects.map(pr => pr.id === p.id ? {...pr, notes: e.target.value} : pr); updateCloud('projects', updated); }}></textarea>
+                                                    <div className="flex justify-between items-center text-xs text-gray-500">
+                                                        <span>Otomatik kaydedilir.</span>
+                                                        <button onClick={() => updateCloud('projects', projects.filter(pr => pr.id !== p.id))} className="text-red-400 hover:text-red-300">Sil</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+
+                        {activeTab === 'store' && (
+                            <div className="space-y-6">
+                                <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="text-sm font-medium opacity-90">TOPLAM SERVETİN</div>
+                                        <div className="text-4xl font-bold mt-1 flex items-center gap-2">{gold} <span className="text-2xl opacity-80">Altın</span></div>
+                                    </div>
+                                    <div className="absolute -right-4 -bottom-8 opacity-20"><svg width="120" height="120" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="10"></circle></svg></div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    {rewards.map(r => (
+                                        <button key={r.id} onClick={() => handleBuyReward(r)} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-yellow-400 hover:shadow-md transition text-left group relative overflow-hidden">
+                                            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition">
+                                                <div onClick={(e) => {e.stopPropagation(); handleDeleteReward(r.id);}} className="p-1 bg-red-50 rounded-full text-red-400 hover:bg-red-100"><Icons.Trash /></div>
+                                            </div>
+                                            <div className="text-2xl mb-2">{r.icon}</div>
+                                            <div className="font-bold text-gray-800 text-sm leading-tight mb-1">{r.title}</div>
+                                            <div className="text-xs font-bold text-yellow-600 bg-yellow-50 inline-block px-2 py-0.5 rounded">{r.cost} Altın</div>
+                                            <div className="absolute inset-0 bg-yellow-400 opacity-0 group-hover:opacity-10 transition flex items-center justify-center"></div>
+                                        </button>
+                                    ))}
+                                    <button onClick={() => openModal('reward_new')} className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 hover:text-indigo-500 transition min-h-[100px]">
+                                        <Icons.Plus />
+                                        <span className="text-xs font-bold mt-1">Ödül Ekle</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'calendar' && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                                    <div className="flex items-center justify-between mb-4 px-1">
+                                        <button 
+                                            onClick={() => setSelectedDate(new Date(selectedDate.setMonth(selectedDate.getMonth() - 1)))} 
+                                            className="p-2 bg-gray-50 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+                                        >
+                                            <Icons.ChevronLeft />
+                                        </button>
+
+                                        <div className="flex flex-col items-center">
+                                            <h3 className="font-bold text-lg capitalize text-gray-800">
+                                                {selectedDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}
+                                            </h3>
+                                            <button 
+                                                onClick={() => setSelectedDate(new Date())}
+                                                className="text-[10px] font-bold text-indigo-500 mt-1 hover:text-indigo-700"
+                                            >
+                                                BUGÜN
+                                            </button>
+                                        </div>
+
+                                        <button 
+                                            onClick={() => setSelectedDate(new Date(selectedDate.setMonth(selectedDate.getMonth() + 1)))} 
+                                            className="p-2 bg-gray-50 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+                                        >
+                                            <Icons.ChevronRight />
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-300 mb-2"><div>Pt</div><div>Sa</div><div>Ça</div><div>Pe</div><div>Cu</div><div>Ct</div><div>Pz</div></div>
+                                    <div className="grid grid-cols-7 gap-2">
+                                        {Array.from({length: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getDay() === 0 ? 6 : new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getDay() - 1}).map((_, i) => <div key={`e-${i}`}></div>)}
+                                        {Array.from({length: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate()}).map((_, i) => {
+                                            const d = i + 1;
+                                            const dDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), d);
+                                            const k = getDateKey(dDate);
+                                            const hData = history[k];
+                                            const stat = getDailyStatus(hData ? hData.tasks : []);
+                                            const isSelected = k === dateKey;
+                                            
+                                            const totalHabits = habits.length;
+                                            const doneHabitsCount = (hData && hData.habits) ? hData.habits.length : 0;
+                                            
+                                            const radius = 20; 
+                                            const circumference = 2 * Math.PI * radius; 
+                                            const gap = 4;
+                                            const segmentLength = totalHabits > 0 ? ((circumference - (totalHabits * gap)) / totalHabits) : circumference;
+                                            const grayDashArray = totalHabits > 0 ? `${segmentLength} ${gap}` : "0 0";
+                                            let goldDashArray = "0 999";
+                                            if (totalHabits > 0 && doneHabitsCount > 0) {
+                                                goldDashArray = new Array(doneHabitsCount).fill(`${segmentLength} ${gap}`).join(' ') + " 0 999";
+                                            }
+
+                                            return (
+                                                <div key={d} onClick={() => setSelectedDate(dDate)} className={`aspect-square relative flex items-center justify-center cursor-pointer group`}>
+                                                    {totalHabits > 0 && (
+                                                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 50 50">
+                                                            <circle cx="25" cy="25" r={radius} fill="none" stroke="#d1d5db" strokeWidth="2" strokeDasharray={grayDashArray} />
+                                                            <circle cx="25" cy="25" r={radius} fill="none" stroke="#EAB308" strokeWidth="2" strokeDasharray={goldDashArray} strokeLinecap="round" />
+                                                        </svg>
+                                                    )}
+                                                    
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border z-10 ${isSelected ? 'ring-2 ring-indigo-500 bg-white' : 'border-transparent'} ${stat.score > 0 ? stat.color.split(' ')[0] : 'bg-gray-100 text-gray-300'}`}>
+                                                        <span>{d}</span>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-white border-t border-gray-100 flex justify-around pb-6 pt-2 z-30 shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
+                        <button onClick={() => setActiveTab('calendar')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='calendar' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Calendar /><span className="text-[9px] font-bold">TAKVİM</span></button>
+                        <button onClick={() => setActiveTab('projects')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='projects' ? 'text-indigo-600':'text-gray-400'}`}><Icons.Briefcase /><span className="text-[9px] font-bold">HEDEF</span></button>
+                        <button onClick={() => setActiveTab('planner')} className={`p-3 -mt-8`}><div className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center border-4 border-white transition-transform ${activeTab==='planner' ? 'bg-indigo-600 text-white scale-110' : 'bg-gray-800 text-white'}`}><Icons.Plus /></div></button>
+                        <button onClick={() => setActiveTab('habits')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='habits' ? 'text-indigo-600':'text-gray-400'}`}><Icons.HabitList /><span className="text-[9px] font-bold">RUTİNLER</span></button>
+                        <button onClick={() => setActiveTab('store')} className={`p-3 flex flex-col items-center gap-1 transition ${activeTab==='store' ? 'text-yellow-600':'text-gray-400'}`}><Icons.Store /><span className="text-[9px] font-bold">MAĞAZA</span></button>
+                    </div>
+
+                    {modal.open && (
+                        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 backdrop-blur-sm p-4">
+                            <div className="bg-white w-full sm:w-96 rounded-3xl p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-bold text-gray-800">
+                                        {modal.type === 'selection' ? 'Ne Ekleyelim?' : 
+                                         modal.type === 'project_new' ? 'Yeni Büyük Hedef' :
+                                         modal.type === 'import' ? 'Projeden Çek' : 
+                                         modal.type === 'habits_edit' ? 'Rutinleri Düzenle' : 
+                                         modal.type === 'journal' ? 'Bugünkü Düşüncelerin' : 
+                                         modal.type === 'reward_new' ? 'Yeni Ödül' : 'Yeni Görev'}
+                                    </h3>
+                                    <button onClick={closeModal} className="bg-gray-100 p-2 rounded-full"><Icons.Close /></button>
+                                </div>
+
+                                {modal.type === 'selection' && (
+                                    <div className="space-y-3">
+                                        <button onClick={() => openModal('simple')} className="w-full p-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-4 shadow-lg shadow-indigo-200"><div className="bg-white/20 p-2 rounded-full"><Icons.Plus /></div> Tek Seferlik Görev</button>
+                                        <div className="text-xs text-gray-400 font-bold uppercase mt-4 mb-2 ml-1">Hedeflerden Çek</div>
+                                        <div className="max-h-60 overflow-y-auto space-y-2 no-scrollbar">
+                                            {projects.map(p => (
+                                                <button key={p.id} onClick={() => openModal('import', p)} className="w-full p-4 border rounded-2xl text-left flex justify-between items-center hover:border-indigo-500"><span className="font-semibold">{p.title}</span><span className="text-xs bg-gray-100 px-2 py-1 rounded">{p.unit}</span></button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {modal.type === 'habits_edit' && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            {habits.map(h => (
+                                                <div key={h.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                                    <div className="flex items-center gap-3"><span className="text-xl">{h.icon}</span><span className="font-medium">{h.title}</span></div>
+                                                    <button onClick={() => deleteHabit(h.id)} className="text-red-400 hover:text-red-600"><Icons.Trash /></button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="pt-4 border-t border-gray-100">
+                                            <div className="text-xs font-bold text-gray-400 mb-2">YENİ RUTİN EKLE</div>
+                                            <div className="flex gap-2">
+                                                <input placeholder="İkon (🧘‍♂️)" className="w-16 p-3 bg-gray-50 rounded-xl text-center" value={form.icon || ''} onChange={e=>setForm({...form, icon: e.target.value})} />
+                                                <input placeholder="Rutin Adı" className="flex-1 p-3 bg-gray-50 rounded-xl" value={form.title || ''} onChange={e=>setForm({...form, title: e.target.value})} />
+                                            </div>
+                                            <button onClick={addHabit} className="w-full mt-2 bg-indigo-600 text-white py-3 rounded-xl font-bold">Ekle</button>
                                         </div>
                                     </div>
                                 )}
