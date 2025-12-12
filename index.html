@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>mylifeOS v5.11 - Stable Cloud</title>
+    <title>mylifeOS v5.13 - Calendar Clock</title>
     
     <!-- React & Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -142,9 +142,10 @@
             );
         }
 
-        // --- CLOCK COMPONENT ---
+        // --- CLOCK COMPONENT (PIZZA SLICE STYLE) ---
         const DailyClocks = ({ tasks }) => {
-            const radius = 40;
+            const radius = 20; 
+            const strokeWidth = 40; 
             const circumference = 2 * Math.PI * radius;
             
             const getTaskStroke = (t, period) => {
@@ -167,6 +168,7 @@
                 const relativeDuration = actualEnd - actualStart;
                 
                 const rotation = (relativeStart / 720) * 360;
+                
                 const filled = (relativeDuration / 720) * circumference;
                 const gap = circumference - filled;
 
@@ -177,49 +179,73 @@
             };
 
             return (
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 mb-6">
-                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Günün Ritmi</div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mt-6">
+                    <div className="text-center font-bold text-gray-700 mb-4 text-xs uppercase tracking-widest">Günün Ritmi</div>
                     <div className="flex justify-around items-center">
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="relative w-24 h-24">
+                        {/* AM CLOCK */}
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="relative w-20 h-20">
                                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                                    <circle cx="50" cy="50" r="48" fill="#e5e7eb" />
+                                    <circle cx="50" cy="50" r="44" fill="white" />
+                                    
                                     {tasks.map(t => {
                                         const style = getTaskStroke(t, 'AM');
                                         if(!style) return null;
                                         return (
-                                            <circle key={`am-${t.id}`} cx="50" cy="50" r="40" fill="none" stroke={t.completed ? "#10B981" : "#6366F1"} strokeWidth="8" strokeDasharray={style.dash} style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} />
+                                            <circle 
+                                                key={`am-${t.id}`} 
+                                                cx="50" cy="50" r="20" 
+                                                fill="none" 
+                                                stroke={t.completed ? "#10B981" : "#4B5563"} 
+                                                strokeWidth="40" 
+                                                strokeDasharray={style.dash} 
+                                                style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} 
+                                            />
                                         )
                                     })}
+                                    
+                                    <circle cx="50" cy="50" r="2" fill="#d1d5db" />
                                 </svg>
-                                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-400">AM</div>
-                                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
+                                <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-gray-400 font-bold">12</div>
+                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-gray-400 font-bold">6</div>
+                                <div className="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-400 font-bold">9</div>
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-400 font-bold">3</div>
                             </div>
-                            <span className="text-[10px] text-gray-400">00:00 - 12:00</span>
+                            <span className="text-[9px] text-gray-400 font-bold tracking-wider">AM</span>
                         </div>
 
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="relative w-24 h-24">
+                        {/* PM CLOCK */}
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="relative w-20 h-20">
                                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                                    <circle cx="50" cy="50" r="48" fill="#e5e7eb" />
+                                    <circle cx="50" cy="50" r="44" fill="white" />
+                                    
                                     {tasks.map(t => {
                                         const style = getTaskStroke(t, 'PM');
                                         if(!style) return null;
                                         return (
-                                            <circle key={`pm-${t.id}`} cx="50" cy="50" r="40" fill="none" stroke={t.completed ? "#10B981" : "#6366F1"} strokeWidth="8" strokeDasharray={style.dash} style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} />
+                                            <circle 
+                                                key={`pm-${t.id}`} 
+                                                cx="50" cy="50" r="20" 
+                                                fill="none" 
+                                                stroke={t.completed ? "#10B981" : "#4B5563"} 
+                                                strokeWidth="40" 
+                                                strokeDasharray={style.dash} 
+                                                style={{transform: `rotate(${style.rotate}deg)`, transformOrigin: 'center'}} 
+                                            />
                                         )
                                     })}
+                                    
+                                    <circle cx="50" cy="50" r="2" fill="#d1d5db" />
                                 </svg>
-                                <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-400">PM</div>
-                                <div className="absolute top-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="absolute right-1 top-1/2 -translate-y-1/2 w-1 h-1 bg-gray-300 rounded-full"></div>
+                                <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] text-gray-400 font-bold">12</div>
+                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] text-gray-400 font-bold">6</div>
+                                <div className="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-400 font-bold">9</div>
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-gray-400 font-bold">3</div>
                             </div>
-                            <span className="text-[10px] text-gray-400">12:00 - 24:00</span>
+                            <span className="text-[9px] text-gray-400 font-bold tracking-wider">PM</span>
                         </div>
                     </div>
                 </div>
@@ -528,8 +554,6 @@
                     <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-6 bg-gray-50/30 scroll-smooth no-scrollbar">
                         {activeTab === 'planner' && (
                             <>
-                                <DailyClocks tasks={currentDayData.tasks || []} />
-
                                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                                     <div className="flex justify-between items-center mb-3">
                                         <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Günlük Rutinler</div>
@@ -759,6 +783,7 @@
                                         })}
                                     </div>
                                 </div>
+                                <DailyClocks tasks={currentDayData.tasks || []} />
                             </div>
                         )}
                     </div>
